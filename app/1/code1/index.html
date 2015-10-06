@@ -1,0 +1,99 @@
+<!! THIS IS THE index.html THAT WE ENDED UP WITH BY THE END OF CLASS>
+
+<script src=lib1.js></script>
+
+<body bgcolor=black>
+<center>
+<canvas id='canvas1' width='600' height='600'>
+</canvas>
+</center>
+</body>
+
+
+<!!=================================================================
+   VERTEX SHADER: runs once per triangle vertex.
+------------------------------------------------------------------->
+
+<script id='vs' type='other'>
+   attribute vec3 aPosition;
+   varying   vec3 vPosition;
+   void main() {
+      gl_Position = vec4(aPosition, 1.0);
+      vPosition = aPosition;
+   }
+</script>
+
+
+<!!=================================================================
+    FRAGMENT SHADER: runs once per pixel fragment.
+
+   Your assignment is to write your own interesting version of the
+   fragment shader program.  Try to have fun with it -- use "uTime"
+   to create animated patterns, and "uCursor" to make it responsive
+   to a user's mouse gestures.
+
+   DO NOT just hand in a variation of what I did in class!  I expect
+   you to create something original.
+.------------------------------------------------------------------>
+
+<script id='fs' type='other'>
+   precision mediump float;
+   uniform float uTime;
+   uniform vec3  uCursor;
+   varying vec3  vPosition;
+
+   // COMPUTE THE Z FOR A SPHERE OF RADIUS r.
+
+   float computeZ(vec2 xy, float r) {
+      float zz = r * r - xy.x * xy.x - xy.y * xy.y;
+      if (zz < 0.)
+         return -1.;
+      else
+         return sqrt(zz);
+   }
+
+   void main() {
+      float x = vPosition.x;
+      float y = vPosition.y;
+      float z = computeZ(vPosition.xy, 1.0);
+
+      // BACKGROUND SHADE IS JUST BLACK (ZERO).
+
+      float s = 0.0;
+
+      // IF WE ARE IN THE SPHERE, THEN SHADE IT.
+
+      if (z > 0.) {
+
+         // START WITH DARK SHADE.
+
+         s = 0.2;
+
+         // ADD DIFFUSE SHADING WHERE SURFACE FACES THE LIGHT.
+
+//       float d = dot(vec3(x,y,z), vec3(1.,1.,sin(uTime))); // ANIMATE LIGHT DIRECTION.
+
+         float d = dot(vec3(x,y,z), vec3(1.,1.,1.));
+
+         if (d > 0.)
+            s += 0.3 * d;
+
+         // ADD CRAZY ANIMATED "WOODGRAIN" TEXTURE.
+
+	 s *= 0.9 + 0.1 * sin(10. * (x - y + z +
+	                             0.1 * sin(8. * (x +
+				               .3 * sin(30. * (x-y+z) +
+					                10. * uTime)))));
+      }
+
+      // MULTIPY SHADE BY "WOOD" COLOR.
+
+      gl_FragColor = vec4(s * vec3(1., 0.5, 0.), 1.);
+   }
+</script>
+
+
+<script>
+start_gl("canvas1", getStringFromScript('vs'), getStringFromScript('fs'));
+</script>
+

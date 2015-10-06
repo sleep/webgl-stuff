@@ -1,0 +1,55 @@
+<!! THIS WAS THE index.html THAT WE STARTED WITH AT THE BEGINING OF CLASS>
+
+<script src=lib1.js></script>
+
+<body bgcolor=black>
+<center>
+<canvas id='canvas1' width='640' height='640'>
+</canvas>
+</center>
+</body>
+
+
+<!!=================================================================
+   VERTEX SHADER: runs once per triangle vertex.
+------------------------------------------------------------------->
+
+<script id='vs' type='other'>
+   attribute vec3 aPosition;
+   varying   vec3 vPosition;
+   void main() {
+      gl_Position = vec4(aPosition, 1.0);
+      vPosition = aPosition;
+   }
+</script>
+
+
+<!!=================================================================
+    FRAGMENT SHADER: runs once per pixel fragment.
+
+   Your assignment is to write your own interesting version of the
+   fragment shader program.  Try to have fun with it -- use "uTime"
+   to create animated patterns, and "uCursor" to make it responsive
+   to a user's mouse gestures.
+
+   DO NOT just hand in a variation of what I did in class!  I expect
+   you to create something original.  
+.------------------------------------------------------------------>
+
+<script id='fs' type='other'>
+   precision mediump float;
+   uniform float uTime;
+   uniform vec3  uCursor;
+   varying vec3  vPosition;
+   void main() {
+      float x = mod(2. * (vPosition.x - uCursor.x * uCursor.z), 1.);
+      float y = mod(2. * (vPosition.y - uCursor.y * uCursor.z), 1.);
+      gl_FragColor = vec4(x * .5 + .5, .5 + .5 * sin(3. * uTime), y * .5 + .5, 1.);
+   }
+</script>
+
+
+<script>
+start_gl("canvas1", getStringFromScript('vs'), getStringFromScript('fs'));
+</script>
+

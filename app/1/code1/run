@@ -1,0 +1,7 @@
+#!/bin/sh
+
+# This is a convenience script, so that you can launch you
+# work from the commmand line, just by typing: ./run
+
+arg="$1"; [[ "$arg" == "" ]] && arg="index"
+open -a /Applications/*Chrome.app $arg.html

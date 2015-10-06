@@ -1,5 +1,6 @@
 $navfg: rgb(54, 65,73);
 $navbg: rgb(250,250,250);
+$navwidth: 50px;
 
 $sans: 'Helvetica Neue', Helvetica, Arial, sans-serif;
 $monospace: monospace;
@@ -17,12 +18,14 @@ body {
 }
 
 #app {
-    display: flex;
-    #nav, #content {
-        padding: 2vh 2vw;
-    }
+    display: relative;
     #nav {
-        flex: 0 1 auto;
+        position: absolute;
+        top: 0;
+        left: 0;
+
+        width: $navwidth;
+
         color: $navfg;
         font-family: $monospace;
         background-color: $navbg;
@@ -47,9 +50,11 @@ body {
         }
     }
     #content {
-        flex: 1 0 auto;
+        position: absolute;
+        left: $navwidth;
+        top: 0;
         overflow-y: auto;
-        width: 320px;
+        min-width: 320px;
     }
 }
 

@@ -48,7 +48,8 @@ module.exports = {
     { test: /\.(png|jpg|jpeg|gif|svg)$/, loaders: ["url?limit=10000"]},
     { test: /\.(woff|woff2)$/, loaders: ["url?limit=100000"]},
     { test: /\.(ttf|eot)$/, loaders: ["file"]},
-    { test: /\.(mp3|wav)$/, loaders: ["file"]}
+    { test: /\.(mp3|wav)$/, loaders: ["file"]},
+    { test: /\.glsl$/, loaders: ["webpack-glsl"]},
   ]},
   remarkable : {
     breaks: true,

@@ -29,6 +29,9 @@ export default React.createClass({
                     <li>
                         <MyLink to="/0">/0</MyLink>
                     </li>
+                    <li>
+                        <MyLink to="/1">/1</MyLink>
+                    </li>
                 </ul>
             </div>
         )
