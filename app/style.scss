@@ -1,0 +1,55 @@
+$navfg: rgb(54, 65,73);
+$navbg: rgb(250,250,250);
+
+$sans: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+$monospace: monospace;
+
+html, body, #app {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+}
+body {
+    font-family: $sans;
+    text-rendering: optimizelegibility;
+    -webkit-font-smoothing: antialiased;
+    font-size: 14px;
+}
+
+#app {
+    display: flex;
+    #nav, #content {
+        padding: 2vh 2vw;
+    }
+    #nav {
+        flex: 0 1 auto;
+        color: $navfg;
+        font-family: $monospace;
+        background-color: $navbg;
+        border-right-color: rgba(0, 0, 0, 0.0666667);
+        border-right-style: solid;
+        border-right-width: 1px;
+        height: 100%;
+        ul {
+            margin: 0;
+            padding: 2vh 2vw;
+            li {
+                padding: 1vh 0;
+                list-style-type: none;
+            }
+        }
+        a {
+            color: $navfg;
+            text-decoration: none;
+        }
+        .current, a:hover {
+            color: #008cff;
+        }
+    }
+    #content {
+        flex: 1 0 auto;
+        overflow-y: auto;
+        width: 320px;
+    }
+}
+
