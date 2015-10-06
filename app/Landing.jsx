@@ -1,31 +1,48 @@
 import React from "react";
-import literalify from "./literatify.js";
+import Literate from "./Literate.jsx";
 
 export default React.createClass({
   render() {
     let content = [
       `
 # Computer Graphics
-This is Sean Lee's page for Computer Graphics...
+
+This is Sean Lee's page
+for Computer Graphics...
 
 This is a counter:
       `,
       React.createElement(require("./Counter")),
       `
-Look at it count!
+*Let me test some markdown...*
+Paragraph
 
-Let me test some markdown...
 
 List
 - foo
 - bar
 - foobar
-       `
+
+\`The tricky part is expressing backticks...\`
+\`\`\`
+and code
+
+
+
+sequences
+\`\`\`
+       `,
     ];
+    let config = {
+      wysiwyg: true,
+      gfm: true,
+      breaks: true,
+      html: true,
+    };
     return (
-      <div>
-        {content.map(literalify)}
-      </div>
+      <Literate config={config}>
+        {content}
+      </Literate>
     );
   }
 });
