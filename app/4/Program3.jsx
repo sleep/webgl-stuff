@@ -22,11 +22,15 @@ uniform vec3 uCursor;
 varying vec3 vPosition;
 
 
-vec4 sphere[3];
-vec3 material[3];
+struct World {
+  vec4 sphere[3];
+  vec3 material[3];
 
-vec3 light_rgb[3];
-vec3 light_dir[3];
+  vec3 light_rgb[3];
+  vec3 light_dir[3];
+};
+
+
 
 
 // utility functions:
@@ -110,13 +114,59 @@ vec3 shade(vec3 S, vec3 N, vec3 material, vec3 light_dir, vec3 light_rgb) {
   return color;
 }
 
+
 // vec3 shadeWithShadows(vec3 S, vec3 N, vec3 material, vec3 light_dir, vec3 light_rgb, vec3 sphere[3]) {
+
+
 // }
+
+// rayTrace :: (vec3 V, vec3 W, World world) -> vec3 color
+// V == ray origin
+// W == ray direction
+// world == World data
+
+vec3 rayTrace(vec3 V, vec3 W, World world) {
+  // CALCULATE SURFACE POINT
+  // Loop through spheres to find closest surface point min_S
+
+  float min_t = 10000.;
+  vec3 min_S;
+  vec3 min_N;
+  vec3 min_material;
+
+  for (int i = 0; i < 3; i++) {
+    float t = raySphere(V, W, world.sphere[i]);
+    if (t < min_t) {
+      min_t = t;
+
+      min_S = V + t*W;
+      min_N = (min_S - world.sphere[i].xyz)/ world.sphere[i].w;
+      min_material = world.material[i];
+    }
+  }
+
+  // if surface point not found, color black and return.
+  if (min_t >= 10000.) {
+    return vec3(0., 0., 0.);
+  }
+
+  // SHADE POINT ON IMAGE PLANE
+  // (INVARIANT: min_S, min_N, min_material are defined vec3's)
+
+  vec3 color = vec3(0., 0., 0.); // output color
+
+  // Loop over lights:
+  for (int i = 0; i < 3; i ++) {
+    color += shade(min_S, min_N, min_material, world.light_dir[i], world.light_rgb[i]);
+  }
+  return color;
+}
 
 
 void main(void) {
 
-  //INITIALZE RAY-TRACER
+  World world;
+  //INITIALZE VIEWER
 
   // Viewer aka eye position
   vec3 V = vec3(0., 0., 0.);
@@ -133,14 +183,14 @@ void main(void) {
   // INITIALIZE LIGHTS
 
   // Light from infinity (diffuse lighting)
-  light_rgb[0] = vec3(0.5, 0.5, 0.5);
-  light_dir[0] = -1. * normalize(inverseMercator(uCursor.x, uCursor.y, 1.));
+  world.light_rgb[0] = vec3(0.5, 0.5, 0.5);
+  world.light_dir[0] = -1. * normalize(inverseMercator(uCursor.x, uCursor.y, 1.));
 
-  light_rgb[1] = vec3(0.0, 0.0, 0.0);
-  light_dir[1] = normalize(vec3(-1.0, -1.0, -1.0));
+  world.light_rgb[1] = vec3(0.0, 0.0, 0.0);
+  world.light_dir[1] = normalize(vec3(-1.0, -1.0, -1.0));
 
-  light_rgb[2] = vec3(0.0, 0.0, 0.0);
-  light_dir[2] = normalize(vec3(1.0, -1.0, -1.0));
+  world.light_rgb[2] = vec3(0.0, 0.0, 0.0);
+  world.light_dir[2] = normalize(vec3(1.0, -1.0, -1.0));
 
 
 
@@ -157,54 +207,19 @@ void main(void) {
   vec3 orbit_1 = vec3(r_1 * cos(theta_1),0,  r_1 * sin(theta_1));
   vec3 orbit_2 = vec3(r_2 * cos(theta_2),0,  r_2 * sin(theta_2));
 
-  sphere[0] = vec4(center, 0.25);
-  sphere[1] = vec4(sphere[0].xyz + orbit_1, 0.05);
-  sphere[2] = vec4(sphere[1].xyz + orbit_2, 0.01);
+  world.sphere[0] = vec4(center, 0.25);
+  world.sphere[1] = vec4(world.sphere[0].xyz + orbit_1, 0.05);
+  world.sphere[2] = vec4(world.sphere[1].xyz + orbit_2, 0.01);
 
   // sphere properties
-  material[0] = vec3(1.0, 1.0, 1.0);
-  material[1] = vec3(1.0, 1.0, 1.0);
-  material[2] = vec3(1.0, 1.0, 1.0);
+  world.material[0] = vec3(1.0, 1.0, 1.0);
+  world.material[1] = vec3(1.0, 1.0, 1.0);
+  world.material[2] = vec3(1.0, 1.0, 1.0);
 
 
+  // RAY TRACE
 
-
-  // CALCULATE SURFACE POINT
-  // Loop through spheres to find closest surface point min_S
-
-  float min_t = 10000.;
-  vec3 min_S;
-  vec3 min_N;
-  vec3 min_material;
-
-  for (int i = 0; i < 3; i++) {
-    float t = raySphere(V, W, sphere[i]);
-    if (t < min_t) {
-      min_t = t;
-
-      min_S = V + t*W;
-      min_N = (min_S - sphere[i].xyz)/ sphere[i].w;
-      min_material = material[i];
-    }
-  }
-
-  // if surface point not found, color black and return.
-  if (min_t >= 10000.) {
-    gl_FragColor = vec4(0., 0., 0., 1.);
-    return;
-  }
-
-  // SHADE POINT ON IMAGE PLANE
-  // (INVARIANT: min_S, min_N, min_material are defined vec3's)
-
-  vec3 color = vec3(0., 0., 0.); // output color
-
-  // Loop over lights:
-  for (int i = 0; i < 3; i ++) {
-    color += shade(min_S, min_N, min_material, light_dir[i], light_rgb[i]);
-  }
-
-
+  vec3 color = rayTrace(V, W, world);
   color = pow(color, vec3(.45, .45, .45)); // Gamma correction
   gl_FragColor = vec4(color, 1.);
 }
