@@ -21,17 +21,24 @@ uniform float uTime;
 uniform vec3 uCursor;
 varying vec3 vPosition;
 
+struct Light {
+  vec3 dir;
+  vec3 rgb;
+};
 
 struct World {
   vec4 sphere[3];
   vec3 material[3];
 
-  vec3 light_rgb[3];
-  vec3 light_dir[3];
+  Light light[3];
 };
 
 
 struct Surface {
+  bool exists;
+
+  // INVARIANT: exists -> the following are all defined:
+
   vec3 S; //surface point (position)
   vec3 N; //surface normal (orientation)
 
@@ -93,14 +100,13 @@ float raySphere(vec3 V, vec3 W, vec4 sph) {
 }
 
 
-// shade :: (Surface surf, vec3 light_dir, vec3 light_rgb) -> vec3 color
+// shade :: (Surface surf, Light light) -> vec3 color
+// Returns rgb data for a surface given a light
 
-vec3 shade(Surface surf, vec3 light_dir, vec3 light_rgb) {
-  // // Tests:
-  // normal should point towards the screen
-  // if (dot(surf.N, vec3(0., 0., 1.)) < 0.) {
-  //   return errorColor();
-  // }
+vec3 shade(Surface surf, Light light) {
+  // if (!surf.exists) return errorColor();
+  // // normal should point towards the screen
+  // if (dot(surf.N, vec3(0., 0., 1.)) < 0.) return errorColor();
 
   // ambient
   vec3 a_rgb = surf.material/ 5.;
@@ -112,35 +118,40 @@ vec3 shade(Surface surf, vec3 light_dir, vec3 light_rgb) {
   vec3 s_rgb = vec3(0.5, 0.5, 0.5); // specular light color
   float shinyness = 6.;
   vec3 eye = -1. * normalize(surf.S);
-  vec3 halfway = normalize(-1. * light_dir + eye);
+  vec3 halfway = normalize(-1. * light.dir + eye);
 
 
   vec3 color = a_rgb;
-  color += light_rgb * d_rgb* max(0., dot(surf.N, -1. * light_dir));
-  color += light_rgb * s_rgb* pow(max(0., dot(surf.N, halfway)), shinyness);
+  color += light.rgb * d_rgb* max(0., dot(surf.N, -1. * light.dir));
+  color += light.rgb * s_rgb* pow(max(0., dot(surf.N, halfway)), shinyness);
 
   return color;
 }
 
 
-// vec3 shadeWithShadows(vec3 S, vec3 N, vec3 material, vec3 light_dir, vec3 light_rgb, vec3 sphere[3]) {
+// shadeWithShadows :: (Surface surf, Light light, World world) -> vec3 color
+// Returns rgb data for a surface given a light and the world
 
+// vec3 shadeWithShadows(Surface surf, Light light, World world) {
+//   // if (!surf.exists) return errorColor();
 
+//   vec3 V_prime = surf.S;
 // }
 
-
-// rayTrace :: (vec3 V, vec3 W, World world) -> vec3 color
+// getSurface :: (vec3 V, vec3 W, World world) -> Surface surface
 // where 
-//   V == ray origin
-//   W == ray direction
-//   world == World data
+//   V is ray origin
+//   W is ray direction
+//   world is World data
+// 
+// Traces a ray from V in the W direction, returning a surface struct
 
-vec3 rayTrace(vec3 V, vec3 W, World world) {
-  // CALCULATE SURFACE POINT
+Surface getSurface(vec3 V, vec3 W, World world) {
   // Loop through spheres to find closest surface point min_S
-
-  float min_t = 10000.;
   Surface surf;
+
+  surf.exists = false;
+  float min_t = 10000.;
 
   for (int i = 0; i < 3; i++) {
     float t = raySphere(V, W, world.sphere[i]);
@@ -150,23 +161,41 @@ vec3 rayTrace(vec3 V, vec3 W, World world) {
       surf.S = V + t*W;
       surf.N = (surf.S - world.sphere[i].xyz)/ world.sphere[i].w;
       surf.material = world.material[i];
+      surf.exists = true;
     }
   }
+  return surf;
+  // Remark: if I want to pass t value, then I should make a wrapper struct to return Ray and Surface
+}
 
-  bool notFound = (min_t >= 10000.);
-  if (notFound) {
+
+// rayTrace :: (vec3 V, vec3 W, World world) -> vec3 color
+// where 
+//   V is ray origin
+//   W is ray direction
+//   world is World data
+// 
+// Traces a ray from V in the W direction, returning a color
+
+vec3 rayTrace(vec3 V, vec3 W, World world) {
+  // CALCULATE SURFACE POINT
+
+  Surface surf = getSurface(V, W, world);
+
+  if (!surf.exists) {
     return vec3(0., 0., 0.);
   }
 
   // SHADE POINT ON IMAGE PLANE
-  // (INVARIANT: surf is a defined Surface)
+  // (INVARIANT: surf is defined)
 
   vec3 color = vec3(0., 0., 0.); // output color
 
   // Loop over lights:
   for (int i = 0; i < 3; i ++) {
-    color += shade(surf, world.light_dir[i], world.light_rgb[i]);
+    color += shade(surf, world.light[i]);
   }
+
   return color;
 }
 
@@ -188,14 +217,14 @@ void main(void) {
   // INITIALIZE LIGHTS
 
   // Light from infinity (diffuse lighting)
-  world.light_rgb[0] = vec3(0.5, 0.5, 0.5);
-  world.light_dir[0] = -1. * normalize(inverseMercator(uCursor.x, uCursor.y, 1.));
+  world.light[0].rgb = vec3(0.5, 0.5, 0.5);
+  world.light[0].dir = -1. * normalize(inverseMercator(uCursor.x, uCursor.y, 1.));
 
-  world.light_rgb[1] = vec3(0.0, 0.0, 0.0);
-  world.light_dir[1] = normalize(vec3(-1.0, -1.0, -1.0));
+  world.light[1].rgb = vec3(0.0, 0.0, 0.0);
+  world.light[1].dir = normalize(vec3(-1.0, -1.0, -1.0));
 
-  world.light_rgb[2] = vec3(0.0, 0.0, 0.0);
-  world.light_dir[2] = normalize(vec3(1.0, -1.0, -1.0));
+  world.light[2].rgb = vec3(0.0, 0.0, 0.0);
+  world.light[2].dir = normalize(vec3(1.0, -1.0, -1.0));
 
 
 
