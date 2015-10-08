@@ -22,7 +22,6 @@ export default React.createClass({
       React.createElement(require("./Program2.jsx")),
       `
 ## Shadows
-
 `,
       React.createElement(require("./Program3.jsx")),
     ];

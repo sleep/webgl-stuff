@@ -31,6 +31,14 @@ struct World {
 };
 
 
+struct Surface {
+  vec3 S; //surface point (position)
+  vec3 N; //surface normal (orientation)
+
+  vec3 material;
+};
+
+
 
 
 // utility functions:
@@ -85,17 +93,17 @@ float raySphere(vec3 V, vec3 W, vec4 sph) {
 }
 
 
-// shade :: (vec3 S, vec3 N, vec3 material, vec3 light_dir, vec3 light_rgb) -> vec3 color
+// shade :: (Surface surf, vec3 light_dir, vec3 light_rgb) -> vec3 color
 
-vec3 shade(vec3 S, vec3 N, vec3 material, vec3 light_dir, vec3 light_rgb) {
+vec3 shade(Surface surf, vec3 light_dir, vec3 light_rgb) {
   // // Tests:
   // normal should point towards the screen
-  // if (dot(N, vec3(0., 0., 1.)) < 0.) {
+  // if (dot(surf.N, vec3(0., 0., 1.)) < 0.) {
   //   return errorColor();
   // }
 
   // ambient
-  vec3 a_rgb = material/ 5.;
+  vec3 a_rgb = surf.material/ 5.;
 
   // diffuse (lambert)
   vec3 d_rgb = vec3(0.5, 0.5, 0.5);
@@ -103,13 +111,13 @@ vec3 shade(vec3 S, vec3 N, vec3 material, vec3 light_dir, vec3 light_rgb) {
   // specular (blinn)
   vec3 s_rgb = vec3(0.5, 0.5, 0.5); // specular light color
   float shinyness = 6.;
-  vec3 eye = -1. * normalize(S);
+  vec3 eye = -1. * normalize(surf.S);
   vec3 halfway = normalize(-1. * light_dir + eye);
 
 
   vec3 color = a_rgb;
-  color += light_rgb * d_rgb* max(0., dot(N, -1. * light_dir));
-  color += light_rgb * s_rgb* pow(max(0., dot(N, halfway)), shinyness);
+  color += light_rgb * d_rgb* max(0., dot(surf.N, -1. * light_dir));
+  color += light_rgb * s_rgb* pow(max(0., dot(surf.N, halfway)), shinyness);
 
   return color;
 }
@@ -120,44 +128,44 @@ vec3 shade(vec3 S, vec3 N, vec3 material, vec3 light_dir, vec3 light_rgb) {
 
 // }
 
+
 // rayTrace :: (vec3 V, vec3 W, World world) -> vec3 color
-// V == ray origin
-// W == ray direction
-// world == World data
+// where 
+//   V == ray origin
+//   W == ray direction
+//   world == World data
 
 vec3 rayTrace(vec3 V, vec3 W, World world) {
   // CALCULATE SURFACE POINT
   // Loop through spheres to find closest surface point min_S
 
   float min_t = 10000.;
-  vec3 min_S;
-  vec3 min_N;
-  vec3 min_material;
+  Surface surf;
 
   for (int i = 0; i < 3; i++) {
     float t = raySphere(V, W, world.sphere[i]);
     if (t < min_t) {
       min_t = t;
 
-      min_S = V + t*W;
-      min_N = (min_S - world.sphere[i].xyz)/ world.sphere[i].w;
-      min_material = world.material[i];
+      surf.S = V + t*W;
+      surf.N = (surf.S - world.sphere[i].xyz)/ world.sphere[i].w;
+      surf.material = world.material[i];
     }
   }
 
-  // if surface point not found, color black and return.
-  if (min_t >= 10000.) {
+  bool notFound = (min_t >= 10000.);
+  if (notFound) {
     return vec3(0., 0., 0.);
   }
 
   // SHADE POINT ON IMAGE PLANE
-  // (INVARIANT: min_S, min_N, min_material are defined vec3's)
+  // (INVARIANT: surf is a defined Surface)
 
   vec3 color = vec3(0., 0., 0.); // output color
 
   // Loop over lights:
   for (int i = 0; i < 3; i ++) {
-    color += shade(min_S, min_N, min_material, world.light_dir[i], world.light_rgb[i]);
+    color += shade(surf, world.light_dir[i], world.light_rgb[i]);
   }
   return color;
 }
@@ -168,11 +176,8 @@ void main(void) {
   World world;
   //INITIALZE VIEWER
 
-  // Viewer aka eye position
-  vec3 V = vec3(0., 0., 0.);
-
-  //focal length
-  float f = 1.;
+  vec3 V = vec3(0., 0., 0.); // Viewer aka eye position
+  float f = 1.; //focal length
 
   //ray from viewer to point on image plane
   vec3 W = normalize(vec3(vPosition.x, vPosition.y, -1. * f));

@@ -3,17 +3,8 @@
 
 ## Why I'm taking this course
 
-- To catalyze a few projects of mine that require 3D computer graphics.
-- To be equipped to realize any future project with 3D graphics.
-- To extend my frontier of dreamable dreams
-
-*Some musings about the third point:*
-
-At the end of the day, I identify as a maker. As a maker, I like to concern myself with the journey between idea and execution, or in other terms, the journey between dreams and reality.
-
-Suppose dreams all have some basis in reality. After making my first dreams come to reality, I'll be able to dream a larger set of dreams, including some of which were previously undreamable.
-
-I'll realize those second-order dreams, and dream up the third-order dreams, etc...
+- To catalyze a few projects that require 3D computer graphics.
+- To be equipped to realize future projects with 3D graphics.
 
 
 ## What I hope to get out of this course
