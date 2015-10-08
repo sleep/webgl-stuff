@@ -23,15 +23,12 @@ export default React.createClass({
         return (
             <div id="nav">
                 <ul>
-                    <li>
-                        <MyLink to="/">/</MyLink>
-                    </li>
-                    <li>
-                        <MyLink to="/0">/0</MyLink>
-                    </li>
-                    <li>
-                        <MyLink to="/1">/1</MyLink>
-                    </li>
+                    <li> <MyLink to="/">/</MyLink> </li>
+                    <li> <MyLink to="/0">/0</MyLink> </li>
+                    <li> <MyLink to="/1">/1</MyLink> </li>
+                    <li> <MyLink to="/2">/2</MyLink> </li>
+                    <li> <MyLink to="/3">/3</MyLink> </li>
+                    <li> <MyLink to="/4">/4</MyLink> </li>
                 </ul>
             </div>
         )

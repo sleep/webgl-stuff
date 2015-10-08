@@ -5,36 +5,24 @@ export default React.createClass({
   render() {
     let content = [
       `
-# Intro to Shaders
+# Ray Tracing
 
-## Lambertian shading
+## Ray tracing with simple diffuse lighting:
 `,
       React.createElement(require("./Program1.jsx")),
       `
-
-whoa dude look at it shade...
-
-## emergent self-similarity in aliasing
-
+## Multiple light sources:
+Red light vector: [-1., -1., -1.];
+Green light vector: [1., -1., -1.];
+Blue light vector: uCursor mapped to a sphere;
 `,
       React.createElement(require("./Program2.jsx")),
       `
+## Multiple spheres:
 
-## full rotation in a sphere
-
-Here we map mouse position to all possible rotations of the sphere.
-
-To get full range of rotations, use inverse mercator projection to map square to sphere.
-
-
-*aliasing death star*
-
+Given a pixel on the image plane, shade it with respect to the closet sphere, i.e. the sphere with minimum t.
 `,
       React.createElement(require("./Program3.jsx")),
-      `
-ooh  whaddabout this
-`,
-      React.createElement(require("./Program4.jsx")),
     ];
     return (
       <SuperLiterate>

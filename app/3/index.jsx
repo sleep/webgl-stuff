@@ -1,13 +1,14 @@
-import React from "react";
-import SuperLiterate from "./SuperLiterate.jsx";
+import React, {PropTypes} from "react";
+import SuperLiterate from "../SuperLiterate";
 
 export default React.createClass({
   render() {
     let content = [
       `
-    This is Sean Lee's page
-    for Computer Graphics...
-       `,
+# Procedural textures
+
+...
+`,
     ];
     return (
       <SuperLiterate>
@@ -15,4 +16,4 @@ export default React.createClass({
       </SuperLiterate>
     );
   }
-});
+})

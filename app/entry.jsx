@@ -22,6 +22,18 @@ let routes = {
         path: "1",
         component: require("./1/index.jsx")
       },
+      {
+        path: "2",
+        component: require("./2/index.jsx")
+      },
+      {
+        path: "3",
+        component: require("./3/index.jsx")
+      },
+      {
+        path: "4",
+        component: require("./4/index.jsx")
+      },
     ]
 }
 

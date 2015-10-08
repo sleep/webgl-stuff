@@ -1,3 +1,19 @@
+import React, {PropTypes} from "react";
+import Program from "../Program";
+
+
+let vs = `
+attribute vec3 aPosition;
+varying vec3 vPosition;
+
+void main() {
+  gl_Position = vec4(aPosition, 1.0);
+  vPosition = aPosition;
+}
+`;
+
+
+let fs = `
 precision mediump float;
 
 uniform float uTime;
@@ -25,7 +41,6 @@ void main(void) {
   float s = 0.0;
 
   if (z > 0.) {
-
     // start with dark shade
     s = 0.2;
 
@@ -39,6 +54,17 @@ void main(void) {
     s += k * max(0., dot(vec3(x, y, z), vec3(1., 1., 1.)));
     s += k * max(0., dot(vec3(x, y, z), vec3(uCursor.xy, 1)));
 
+
+
   }
   gl_FragColor = vec4(s * vec3(0.0, 0.5, 1.0), 1.0);
 }
+`;
+
+export default React.createClass({
+  render() {
+    return (
+        <Program vs={vs} fs={fs}/>
+    );
+  }
+})
