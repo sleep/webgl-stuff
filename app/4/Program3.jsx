@@ -89,6 +89,10 @@ float raySphere(vec3 V, vec3 W, vec4 sph) {
   float c = dot(D, D) - sph.w*sph.w;
 
 
+  if (b > 0.) {
+    return 10000.; //sphere is behind us
+  }
+
   float discriminant = b*b - 4. * a * c;
   if (discriminant < 0.) {
     return 10000.;
@@ -98,45 +102,6 @@ float raySphere(vec3 V, vec3 W, vec4 sph) {
 
   return min(t_1, t_2); // minimum = closer point
 }
-
-
-// shade :: (Surface surf, Light light) -> vec3 color
-// Returns rgb data for a surface given a light
-
-vec3 shade(Surface surf, Light light) {
-  // if (!surf.exists) return errorColor();
-  // // normal should point towards the screen
-  // if (dot(surf.N, vec3(0., 0., 1.)) < 0.) return errorColor();
-
-  // ambient
-  vec3 a_rgb = surf.material/ 5.;
-
-  // diffuse (lambert)
-  vec3 d_rgb = vec3(0.5, 0.5, 0.5);
-
-  // specular (blinn)
-  vec3 s_rgb = vec3(0.5, 0.5, 0.5); // specular light color
-  float shinyness = 6.;
-  vec3 eye = -1. * normalize(surf.S);
-  vec3 halfway = normalize(-1. * light.dir + eye);
-
-
-  vec3 color = a_rgb;
-  color += light.rgb * d_rgb* max(0., dot(surf.N, -1. * light.dir));
-  color += light.rgb * s_rgb* pow(max(0., dot(surf.N, halfway)), shinyness);
-
-  return color;
-}
-
-
-// shadeWithShadows :: (Surface surf, Light light, World world) -> vec3 color
-// Returns rgb data for a surface given a light and the world
-
-// vec3 shadeWithShadows(Surface surf, Light light, World world) {
-//   // if (!surf.exists) return errorColor();
-
-//   vec3 V_prime = surf.S;
-// }
 
 // getSurface :: (vec3 V, vec3 W, World world) -> Surface surface
 // where 
@@ -169,6 +134,67 @@ Surface getSurface(vec3 V, vec3 W, World world) {
 }
 
 
+// shade :: (Surface surf, Light light) -> vec3 color
+// Returns rgb data for a surface given a light
+
+vec3 shade(Surface surf, Light light) {
+  // if (!surf.exists) return errorColor();
+  // // normal should point towards the screen
+  // if (dot(surf.N, vec3(0., 0., 1.)) < 0.) return errorColor();
+
+  // ambient
+  vec3 a_rgb = surf.material/ 5.;
+
+  // diffuse (lambert)
+  vec3 d_rgb = vec3(0.5, 0.5, 0.5);
+
+  // specular (blinn)
+  vec3 s_rgb = vec3(0.5, 0.5, 0.5); // specular light color
+  float shinyness = 6.;
+  vec3 eye = -1. * normalize(surf.S);
+  vec3 halfway = normalize(-1. * light.dir + eye);
+
+
+  vec3 color = a_rgb;
+  color += light.rgb * d_rgb* max(0., dot(surf.N, -1. * light.dir));
+  color += light.rgb * s_rgb* pow(max(0., dot(surf.N, halfway)), shinyness);
+
+  return color;
+}
+
+
+
+// shadeWithShadows :: (Surface surf, Light light, World world) -> vec3 color
+// Returns rgb data for a surface given a light and the world
+
+vec3 shadeWithShadows(Surface surf, Light light, World world) {
+  // if (!surf.exists) return errorColor();
+
+  // From our surface point, we trace in the negative light direction,
+  // to see if an object occludes it.
+
+  float epsilon = 0.01; //we add epsilon to prevent self-occlusion
+
+  vec3 ldir = light.dir;
+  vec3 V_prime = surf.S + epsilon * -1. * ldir;
+  vec3 W_prime = -1. * ldir;
+
+  // if (dot(surf.S, vec3(0., 0., -1.)) > 0.) {
+  //     vec3 a_rgb = errorColor();
+  //     return a_rgb;
+  // }
+  Surface dest = getSurface(V_prime, W_prime, world);
+
+  if (dest.exists) {
+    vec3 a_rgb = surf.material/ 5.;
+    return a_rgb;
+  }
+
+  return shade(surf, light);
+}
+
+
+
 // rayTrace :: (vec3 V, vec3 W, World world) -> vec3 color
 // where 
 //   V is ray origin
@@ -193,7 +219,10 @@ vec3 rayTrace(vec3 V, vec3 W, World world) {
 
   // Loop over lights:
   for (int i = 0; i < 3; i ++) {
-    color += shade(surf, world.light[i]);
+    Light light = world.light[i];
+    if (light.rgb == vec3(0., 0., 0.)) continue;
+
+    color += shadeWithShadows(surf, light, world);
   }
 
   return color;
@@ -205,11 +234,12 @@ void main(void) {
   World world;
   //INITIALZE VIEWER
 
-  vec3 V = vec3(0., 0., 0.); // Viewer aka eye position
-  float f = 1.; //focal length
+
+  float f = 2.0; //focal length
 
   //ray from viewer to point on image plane
   vec3 W = normalize(vec3(vPosition.x, vPosition.y, -1. * f));
+  vec3 V = vec3(0.0, 0., 0.);
 
 
 

@@ -6,6 +6,7 @@ export default React.createClass({
     let content = [
       `
 # Intro to Shaders
+yo what up
 
 ## Lambertian shading
 `,
@@ -37,9 +38,12 @@ ooh  whaddabout this
       React.createElement(require("./Program4.jsx")),
     ];
     return (
+      <div>
+        <h1>YO!!</h1>
       <SuperLiterate>
         {content}
       </SuperLiterate>
+      </div>
     );
   }
 })
