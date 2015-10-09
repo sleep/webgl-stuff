@@ -8,6 +8,14 @@ export default React.createClass({
     vs: PropTypes.string.isRequired,
     fs: PropTypes.string.isRequired
   },
+  getInitialState() {
+    return {
+      animation: false
+    };
+  },
+  componentWillMount() {
+    this.animationFrameRequest = null;
+  },
   componentDidMount() {
     let canvas = this.refs.canvas.getDOMNode();
     let gl = this.gl = canvas.getContext("webgl");
@@ -60,12 +68,19 @@ export default React.createClass({
     gl.uTime = gl.getUniformLocation(program, "uTime");
     gl.uCursor = gl.getUniformLocation(program, "uCursor");
 
-    if (!this.animationFrameRequest) {
-      this.animate();
+    this.draw();
+
+    if (this.state.animation) {
+      console.log(this.animationFrameRequest);
+      if (this.animationFrameRequest === null) {
+        //INVARIANT: afr is non-null if we are animating.
+
+        this.animationFrameRequest = requestAnimationFrame(this.animate);
+      }
     }
 
   },
-  animate() {
+  draw() {
     let gl = this.gl;
 
     // set time
@@ -76,22 +91,41 @@ export default React.createClass({
 
     // render square
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-
+  },
+  animate() {
+    this.draw()
     this.animationFrameRequest = requestAnimationFrame(this.animate);
   },
   componentDidUpdate() {
-    console.log("updated!");
+    console.log("updated!", this.state);
+
+    if (!this.state.animation) {
+      cancelAnimationFrame(this.animationFrameRequest);
+      this.animationFrameRequest = null;
+    }
+
     this.loadProgram();
   },
   componentWillUnmount() {
     cancelAnimationFrame(this.animationFrameRequest);
   },
+  onClick() {
+    this.setState((prev) => ({
+      animation: !prev.animation
+    }));
+  },
   render() {
     let width = 600;
     let height = 600;
 
+    let style = this.state.animation ? {} : {
+      opacity: 0.4,
+    };
+
     return (
       <canvas ref={"canvas"}
+              onClick={this.onClick}
+              style={style}
               width={width}
               height={height}>
         Insert webgl here!

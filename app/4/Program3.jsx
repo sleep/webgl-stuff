@@ -250,8 +250,8 @@ void main(void) {
   world.light[0].rgb = vec3(0.5, 0.5, 0.5);
   world.light[0].dir = -1. * normalize(inverseMercator(uCursor.x, uCursor.y, 1.));
 
-  world.light[1].rgb = vec3(0.0, 0.0, 0.0);
-  world.light[1].dir = normalize(vec3(-1.0, -1.0, -1.0));
+  world.light[1].rgb = vec3(0.5, 0.5, 0.5);
+  world.light[1].dir = normalize(vec3(-1.0, -0.0, -1.0));
 
   world.light[2].rgb = vec3(0.0, 0.0, 0.0);
   world.light[2].dir = normalize(vec3(1.0, -1.0, -1.0));

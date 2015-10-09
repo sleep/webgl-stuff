@@ -24,6 +24,10 @@ export default React.createClass({
 ## Shadows
 `,
       React.createElement(require("./Program3.jsx")),
+      `
+## Boolean intersection
+`,
+      React.createElement(require("./Program4.jsx")),
     ];
     return (
       <SuperLiterate>
