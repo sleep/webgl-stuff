@@ -25,9 +25,14 @@ export default React.createClass({
 `,
       React.createElement(require("./Program3.jsx")),
       `
-## Boolean intersection
+## Add a plane
 `,
       React.createElement(require("./Program4.jsx")),
+      `
+## Boolean intersection
+
+`,
+      React.createElement(require("./Program5.jsx")),
     ];
     return (
       <SuperLiterate>
