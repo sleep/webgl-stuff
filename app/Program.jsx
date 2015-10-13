@@ -6,7 +6,15 @@ import {createfs, createvs, createProgram} from "./util";
 export default React.createClass({
   propTypes: {
     vs: PropTypes.string.isRequired,
-    fs: PropTypes.string.isRequired
+    fs: PropTypes.string.isRequired,
+    width: PropTypes.number,
+    height: PropTypes.number
+  },
+  getDefaultProps() {
+    return {
+      width: 800,
+      height: 800
+    }
   },
   getInitialState() {
     return {
@@ -115,9 +123,6 @@ export default React.createClass({
     }));
   },
   render() {
-    let width = 600;
-    let height = 600;
-
     let style = this.state.animation ? {} : {
       opacity: 0.4,
     };
@@ -126,8 +131,8 @@ export default React.createClass({
       <canvas ref={"canvas"}
               onClick={this.onClick}
               style={style}
-              width={width}
-              height={height}>
+              width={this.props.width}
+              height={this.props.height}>
         Insert webgl here!
       </canvas>
     );

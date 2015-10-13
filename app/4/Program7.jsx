@@ -17,6 +17,7 @@ let fs = `
 precision mediump float;
 
 const float PI  = 3.1415926535897932384626433832795;
+const vec3 SKY_COLOR = vec3(0.0, 0.0, 0.0);
 uniform float uTime;
 uniform vec3 uCursor;
 varying vec3 vPosition;
@@ -36,6 +37,7 @@ struct Surface {
 
   vec3 material;
   float shinyness;
+  float reflectance;
 };
 
 struct Plane {
@@ -44,6 +46,7 @@ struct Plane {
 
   vec3 material;
   float shinyness;
+  float reflectance;
 };
 
 struct Sphere {
@@ -52,6 +55,7 @@ struct Sphere {
 
   vec3 material;
   float shinyness;
+  float reflectance;
 };
 
 struct IntersectionObj{
@@ -59,11 +63,10 @@ struct IntersectionObj{
 };
 
 struct World {
-  // Sphere sphere[1];
-  IntersectionObj io[1];
+  Sphere sphere[3];
   Plane plane[1];
 
-  Light light[3];
+  Light light[2];
 
 };
 
@@ -76,6 +79,22 @@ struct World {
 // utility functions:
 float linlin(float a, float b, float c, float d, float i) {
   return (i - a)/(b-a) * (d-c) + c;
+}
+
+int fastFloor(float a) {
+  return (a > 0.) ? int(a) : int(a - 1.);
+}
+highp mat3 transpose(in highp mat3 inMatrix) {
+  highp vec3 i0 = inMatrix[0];
+  highp vec3 i1 = inMatrix[1];
+  highp vec3 i2 = inMatrix[2];
+
+  highp mat3 outMatrix = mat3(
+                              vec3(i0.x, i1.x, i2.x),
+                              vec3(i0.y, i1.y, i2.y),
+                              vec3(i0.z, i1.z, i2.z)
+                              );
+  return outMatrix;
 }
 
 vec3 inverseMercator(float x, float y, float r) {
@@ -155,90 +174,107 @@ Surface getSurface(vec3 V, vec3 W, World world) {
   float min_t = 10000.;
 
   // loop through spheres
-  // for (int i = 0; i < 3; i++) {
-  //   float t = raySphere(V, W, world.sphere[i]).x;
-  //   if (t < min_t) {
-  //     min_t = t;
+  for (int i = 0; i < 3; i++) {
+    float t = raySphere(V, W, world.sphere[i]).x;
+    if (t < min_t) {
+      min_t = t;
 
-  //     surf.S = V + t*W;
-  //     surf.N = (surf.S - world.sphere[i].P)/ world.sphere[i].r;
-  //     surf.material = world.sphere[i].material;
-  //     surf.shinyness = world.sphere[i].shinyness;
-  //     surf.exists = true;
-  //   }
-  // }
+      surf.S = V + t*W;
+      surf.N = (surf.S - world.sphere[i].P)/ world.sphere[i].r;
+      surf.material = world.sphere[i].material;
+      surf.shinyness = world.sphere[i].shinyness;
+      surf.reflectance = world.sphere[i].reflectance;
+      surf.exists = true;
+    }
+  }
+
   //loop through planes
+
   for (int i = 0; i<1; i++) {
     float t = rayPlane(V, W, world.plane[i].P, world.plane[i].N);
     if (t < min_t) {
       min_t = t;
 
+      //make checkered
+      //TODO: do this with orthonormal basis....
+
+
       surf.S = V + t*W;
       surf.N = world.plane[i].N;
-      surf.material = world.plane[i].material;
+
+      // vec3 b1 = normalize(vec3(0.,  -1. * surf.N.y, surf.N.z));
+      // vec3 b2 = normalize(vec3(surf.N.y*surf.N.y + surf.N.z * surf.N.z, -1. * surf.N.y * surf.N.x, -1. * surf.N.x * surf.N.z));
+
+      // mat3 B = transpose(mat3(surf.N, b1, b2)); //wrong basis, because I don't take the inverse
+
+      float k = 0.1;
+      // vec3 D = B*((world.plane[i].P - surf.S)/k);
+      vec3 D = (world.plane[i].P - surf.S)/k;
+      // ivec3 M = ivec3(fastFloor(D.x), fastFloor(D.y), fastFloor(D.z));
+      ivec3 M = ivec3(D);
+
+      float manhattan = float(M.x + M.y + M.z);
+      
+
+      // if integer manhattan distance is even, material, else black;
+      // surf.material = mod(int(D.x) + floor(D.y) + floor(D.z), 2.) < 1.
+      surf.material = mod(manhattan, 2.) < 1.
+        ? world.plane[i].material
+        : vec3(1.0, 1.0, 1.0);
+
       surf.shinyness = world.plane[i].shinyness;
+      surf.reflectance = world.plane[i].reflectance;
       surf.exists = true;
     }
   }
 
   // loop through IntersectionObjects
-  for (int i = 0; i < 1; i++) {
-    // we want to use the surface with the maximum in time
-    // and the minimum out time
-    float max_in = -10000.; // lower bound
-    float min_out = 10000.; // upper bound
-    Surface _surf;
+  // for (int i = 0; i < 1; i++) {
+  //   // we want to use the surface with the maximum in time
+  //   // and the minimum out time
+  //   float max_in = -10000.; // lower bound
+  //   float min_out = 10000.; // upper bound
+  //   Surface _surf;
 
-    bool found = true;
+  //   bool found = true;
 
-    for (int j = 0; j < 6; j++) {
-      vec2 in_out = raySphere(V, W, world.io[i].sphere[j]);
-      float t_in = in_out[0];
-      float t_out = in_out[1];
+  //   for (int j = 0; j < 6; j++) {
+  //     vec2 in_out = raySphere(V, W, world.io[i].sphere[j]);
+  //     float t_in = in_out[0];
+  //     float t_out = in_out[1];
 
-      // if intersection
-      if (t_in < 10000.) {
-        // INVARIANT: t_in, t_out are under 10000, aka their true values
-        // surface exists
+  //     // if intersection
+  //     if (t_in < 10000.) {
+  //       // INVARIANT: t_in, t_out are under 10000, aka their true values
+  //       // surface exists
 
-        if (t_in > max_in) { // time in greater than previous max in
-          max_in = t_in;
+  //       if (t_in > max_in) { // time in greater than previous max in
+  //         max_in = t_in;
 
-          // we have to set _surf here, because we cannot have variable array references.
+  //         // we have to set _surf here, because we cannot have variable array references.
 
-          _surf.S = V + t_in*W;
-          _surf.N = (_surf.S - world.io[i].sphere[j].P)/ world.io[i].sphere[j].r;
-          _surf.material = world.io[i].sphere[j].material;
-          _surf.shinyness = world.io[i].sphere[j].shinyness;
-          _surf.exists = true;
-        }
-        if (t_out < min_out) { // time out less than previous min out
-          min_out = t_out;
-        }
-      } else {
-        // We break and declare not found, because an intersection requires
-        // the point to exist in all n objects
-        found = false;
-        break;
-      }
-    }
+  //         _surf.S = V + t_in*W;
+  //         _surf.N = (_surf.S - world.io[i].sphere[j].P)/ world.io[i].sphere[j].r;
+  //         _surf.material = world.io[i].sphere[j].material;
+  //         _surf.shinyness = world.io[i].sphere[j].shinyness;
+  //         _surf.reflectance= world.io[i].sphere[j].reflectance;
+  //         _surf.exists = true;
+  //       }
+  //       if (t_out < min_out) { // time out less than previous min out
+  //         min_out = t_out;
+  //       }
+  //     } else {
+  //       // We break and declare not found, because an intersection requires
+  //       // the point to exist in all n objects
+  //       found = false;
+  //       break;
+  //     }
+  //   }
 
-    // max_in must be less than max_out, because it must go in before it goes out
-
-    // // max_in must be less than min_t to be in front of all the other objects
-    // found = found && (max_in < min_out);
-
-    // // max_in must be greater than its lower bound (-10000.)
-    // found = found && (max_in > -10000.);
-
-    // // min_out must be less thanthan its upper bound (10000.)
-    // found = found && (min_out < 10000.);
-
-
-    if (found && (max_in < min_t)) {
-      surf = _surf;
-    }
-  }
+  //   if (found && (max_in < min_t)) {
+  //     surf = _surf;
+  //   }
+  // }
   return surf;
   // Remark: if I want to pass t value, then I should make a wrapper struct to return Ray and Surface
 }
@@ -313,31 +349,46 @@ vec3 shadeWithShadows(Surface surf, Light light, World world) {
 // 
 // Traces a ray from V in the W direction, returning a color
 
-vec3 rayTrace(vec3 V, vec3 W, World world) {
-  // CALCULATE SURFACE POINT
+vec3 rayTrace(vec3 V_initial, vec3 W_initial, World world) {
 
-  Surface surf = getSurface(V, W, world);
+  //INITIAL CONDITION:
+  vec3 color = vec3(0., 0., 0.); // output color. Mutated over iteration
+  float reflectance = 1.0; // Reflectance, mutated over iteration
+  vec3 V = V_initial;
+  vec3 W = W_initial;
 
-  if (!surf.exists) {
-    return vec3(0.1, 0.2, 0.7);
+  for (int i = 0; i < 5; i++) {
+    //INVARIANT: reflectance > 0.
+    // V, W, reflectance belong to current iteration
+
+    Surface surf = getSurface(V, W, world);
+    vec3 _color = vec3(0., 0., 0.);
+
+    if (!surf.exists) {
+      _color = SKY_COLOR;
+      // POST-LOOP
+      color = color * (1. - reflectance) + reflectance * _color;
+      break;
+    }
+
+    for (int i = 0; i < 2; i ++) {
+      Light light = world.light[i];
+
+      _color += shadeWithShadows(surf, light, world);
+    }
+
+    // POST-LOOP
+    color = color * (1. - reflectance) + reflectance * _color;
+
+    reflectance *= surf.reflectance;
+    V = surf.S;
+    W = 2. * (dot(-1. * W, surf.N)) * surf.N - (-1. * W);
+
+    //OPTIMIZATION
+    if (reflectance < 0.) break;
   }
-
-  // SHADE POINT ON IMAGE PLANE
-  // (INVARIANT: surf is defined)
-
-  vec3 color = vec3(0., 0., 0.); // output color
-
-  // Loop over lights:
-  for (int i = 0; i < 3; i ++) {
-    Light light = world.light[i];
-    if (light.rgb == vec3(0., 0., 0.)) continue;
-
-    color += shadeWithShadows(surf, light, world);
-  }
-
   return color;
 }
-
 
 void main(void) {
 
@@ -345,7 +396,7 @@ void main(void) {
   //INITIALZE VIEWER
 
 
-  float f = 2.0; //focal length
+  float f = 1.0; //focal length
 
   //ray from viewer to point on image plane
   vec3 W = normalize(vec3(vPosition.x, vPosition.y, -1. * f));
@@ -363,68 +414,35 @@ void main(void) {
   world.light[1].rgb = vec3(0.3, 0.3, 0.3);
   world.light[1].dir = normalize(vec3(-1.0, -1.0, -1.0));
 
-  world.light[2].rgb = vec3(0.0, 0.0, 0.0);
-  world.light[2].dir = normalize(vec3(1.0, -1.0, -1.0));
-
 
 
 
   // INITIALIZE OBJECTS
+  vec3 center = vec3(0., 0., -2.);
+  float theta = uTime * 0.5;
+  float r_1 = 0.8; //rotational radius
+  float r_sphere = 0.5;
 
-
-
-  float r_1 = 0.25; //radius of spheres
-  float r_2 =  0.09; //distance from center
-
-  float maxheight = 0.1;
-  float height =  maxheight + sin(uTime) * maxheight;// in multiples of ball heights
-  vec3 center = vec3(0., height, -1.);
-  // r_2  must be less than r_1
-
-  float theta = uTime/3.;
-  float k = 1.0;
-  float phase0 = sin(theta * 2. + 0. * PI) * k;
-  float phase1 = sin(theta * 2. + 1. * PI) * k;
-  float phase2 = sin(theta * 3. + 0. * PI) * k;
-  float phase3 = sin(theta * 3. + 1. * PI) * k;
-  float phase4 = sin(theta * 5. + 0. * PI) * k;
-  float phase5 = sin(theta * 5. + 1. * PI) * k;
-
-  world.io[0].sphere[0].r = r_1 + 0.01* phase0;
-  world.io[0].sphere[1].r = r_1 + 0.01* phase1;
-  world.io[0].sphere[2].r = r_1 + 0.01* phase2;
-  world.io[0].sphere[3].r = r_1 + 0.01* phase3;
-  world.io[0].sphere[4].r = r_1 + 0.01* phase4;
-  world.io[0].sphere[5].r = r_1 + 0.01* phase5;
-
-
-  float phi = sin(uTime) * 6.;
-
-  vec3 dirA = normalize(vec3(cos(phi), 0., sin(phi)));
-  vec3 dirB = normalize(vec3(0., 1., 0.));
-  vec3 dirC = normalize(vec3(-1. * sin(phi),0.,  cos(phi)));
-
-
-  world.io[0].sphere[0].P = center +  1.0 * r_2 * dirA;
-  world.io[0].sphere[1].P = center + -1.0 * r_2 * dirA;
-  world.io[0].sphere[2].P = center +  1.0 * r_2 * dirB;
-  world.io[0].sphere[3].P = center + -1.0 * r_2 * dirB;
-  world.io[0].sphere[4].P = center +  1.0 * r_2 * dirC;
-  world.io[0].sphere[5].P = center + -1.0 * r_2 * dirC;
-
-  for (int i = 0 ; i<6; i++) {
-    world.io[0].sphere[i].material = vec3(1., 1., 1.);
+  for (int i = 0; i< 3; i++) {
+    //rotation around y axis
+    float rot_phase = float(i) * 2.0 * PI / 3.0;
+    float rot_angle = theta + rot_phase;
+    world.sphere[i].P = center + r_1 * vec3(cos(rot_angle), 0., sin(rot_angle));
+    world.sphere[i].r = r_sphere;
+    world.sphere[i].material = vec3(1.0, 1.0, 1.0);
+    world.sphere[i].shinyness = 6.;
+    world.sphere[i].reflectance = 0.5;
   }
 
-  for (int i = 0; i < 6; i++) {
-    world.io[0].sphere[i].shinyness = 5.;
-  }
+
+
 
   //plane
-  world.plane[0].N = vec3(0., 1., 0.);
-  world.plane[0].P = vec3(0., -0.25, 0.);
-  world.plane[0].material = vec3(0.0, 1.0, 0.0);
+  world.plane[0].N = normalize(vec3(0., 1., 0.));
+  world.plane[0].P = vec3(10000., -0.50, -1.);
+  world.plane[0].material = vec3(0.0, 0.0, 0.0);
   world.plane[0].shinyness = 3.;
+  world.plane[0].reflectance = 0.4;
 
   // RAY TRACE
 
@@ -437,7 +455,7 @@ void main(void) {
 export default React.createClass({
     render() {
       return (
-              <Program width={400} height={400} vs={vs} fs={fs}/>
+              <Program width={320} height={320} vs={vs} fs={fs}/>
               );
     }
   });

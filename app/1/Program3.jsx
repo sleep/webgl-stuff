@@ -1,4 +1,3 @@
-
 import React, {PropTypes} from "react";
 import Program from "../Program";
 
@@ -76,9 +75,9 @@ void main(void) {
     s += k * max(0., d);
 
     if (d > 0.) {
-      s *= sin(sin(d * (pow(2.0, 10.0  +  2.*(sin(uTime/1000.)))))* d);
+      s *= sin(sin(d * (pow(2.0, 8.0  +  4.*(sin(uTime/1000.)))))* d);
     }else {
-      s *= sin(sin(d * (pow(2.0, 10.0  +  2.*(sin(uTime/1000.)))))* d) * 0.4;
+      s *= sin(sin(d * (pow(2.0, 8.0  +  4.*(sin(uTime/1000.)))))* d) * 0.4;
     }
   }
   gl_FragColor = vec4(s * vec3(1.0, 1.0, 1.0), 1.0);

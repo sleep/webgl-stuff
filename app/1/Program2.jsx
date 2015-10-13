@@ -62,7 +62,7 @@ void main(void) {
 
     float dotprod = dot(n, l);
     // s *= sin(z * sin(z* sin(z * uTime) * uTime));
-    s *= sin(sin(dotprod * (pow(2.0, 10.0  +  2.*(sin(uTime/1000.)))))* dotprod);
+    s *= sin(sin(dotprod * (pow(2.0, 8.0  +  4.*(sin(uTime/1000.)))))* dotprod);
 
 
 
