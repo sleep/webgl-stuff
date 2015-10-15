@@ -47,7 +47,7 @@ export default React.createClass({
 ## Opacity + Reflection
 A non-recursive "recursive" ray tracer with either just reflection or just transmission is simple to implement iteratively. This is because the recursion happens only once per call: at the tail. A photon in is a photon out. There is no need for a stack as the colors mix linearly, and so the memory requirements are O(1).
 
-However, implementing both reflection and transmission means two points of recursion per call, as now each. Now we need a data structure to keep track of unexplored nodes in the ray tree. Because of the multiplicative branching factor, the computation grows exponentially relative to the amount of levels.
+However, implementing both reflection and transmission means two points of recursion per call, as now each photon in is at maximum two photons out. Now we need a data structure to keep track of unexplored nodes in the ray tree. Because of the multiplicative branching factor, the computation grows exponentially relative to the amount of levels.
 
 The following solution uses a heap implemented in an array, which uses O(2^n) memory, where n is the number of levels to fork photons. The code is so slow because I shimmy in a O(n) workaround for dynamic array indexing. OpenGL ES allows only constants, loop indicies, and combinations thereof for array indexing, so I emulate variable array indexing simply by looping until my loop index equals my variable and then breaking.
 

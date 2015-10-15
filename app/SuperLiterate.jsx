@@ -13,7 +13,7 @@ export default React.createClass({
       html: true,
     };
     return (
-      <Literate config={config}>
+      <Literate className="literate" config={config}>
         {this.props.children}
       </Literate>
     )

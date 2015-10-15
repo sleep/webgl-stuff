@@ -440,7 +440,7 @@ void main(void) {
 export default React.createClass({
     render() {
       return (
-              <Program width={500} height={500} vs={vs} fs={fs}/>
+              <Program vs={vs} fs={fs}/>
               );
     }
   });

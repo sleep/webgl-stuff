@@ -89,6 +89,7 @@ export default React.createClass({
 
   },
   draw() {
+
     let gl = this.gl;
 
     // set time
@@ -117,24 +118,32 @@ export default React.createClass({
   componentWillUnmount() {
     cancelAnimationFrame(this.animationFrameRequest);
   },
-  onClick() {
-    this.setState((prev) => ({
-      animation: !prev.animation
-    }));
+  onMouseOver() {
+    this.setState({animation: true});
+  },
+  onMouseLeave() {
+    this.setState({animation: false});
   },
   render() {
-    let style = this.state.animation ? {} : {
-      opacity: 0.4,
-    };
+    let style = Object.assign({
+      width: "100vmin",
+      height: "auto"
+    }, this.state.animation ? {} : {
+      /*       opacity: 0.4, */
+    });
 
     return (
-      <canvas ref={"canvas"}
-              onClick={this.onClick}
-              style={style}
-              width={this.props.width}
-              height={this.props.height}>
-        Insert webgl here!
-      </canvas>
+      <div className={"programContainer"}>
+        <canvas ref={"canvas"}
+                onMouseOver={this.onMouseOver}
+                onMouseLeave={this.onMouseLeave}
+                style={style}
+                className={"program"}
+                width={this.props.width}
+                height={this.props.height}>
+            Insert webgl here!
+        </canvas>
+      </div>
     );
   }
 });
