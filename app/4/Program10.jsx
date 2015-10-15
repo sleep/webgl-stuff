@@ -23,6 +23,10 @@ uniform float uTime;
 uniform vec3 uCursor;
 varying vec3 vPosition;
 
+// Goal: monotonic, slope bounded between 1 and 0
+float time = uTime + pow(sin(uTime/3.), 3.);
+
+
 struct Light {
   vec3 dir;
   vec3 rgb;
@@ -230,10 +234,10 @@ vec3 shade(Surface surf, Light light) {
   vec3 a_rgb = surf.material/ 6.;
 
   // diffuse (lambert)
-  vec3 d_rgb = vec3(0.4, 0.4, 0.4);
+  vec3 d_rgb = 0.5 * vec3(1.0, 1.0, 1.0);
 
   // specular (blinn)
-  vec3 s_rgb = vec3(0.5, 0.5, 0.5); // specular light color
+  vec3 s_rgb = vec3(1.0, 1.0, 1.0); // specular light color
   vec3 eye = -1. * normalize(surf.S);
   vec3 halfway = normalize(-1. * light.dir + eye);
 
@@ -241,7 +245,6 @@ vec3 shade(Surface surf, Light light) {
   vec3 color = a_rgb;
   color += light.rgb * d_rgb* max(0., dot(surf.N, -1. * light.dir));
   color += light.rgb * s_rgb* pow(max(0., dot(surf.N, halfway)), 6.);
-  color *= min(1., 5./surf.t);
 
   return color;
 }
@@ -292,11 +295,13 @@ vec3 rayTrace(vec3 V_initial, vec3 W_initial, World world) {
   //INITIAL CONDITION:
   vec3 color = vec3(0., 0., 0.); // output color. Mutated over iteration
   float scale = 1.0; // Reflectance, mutated over iteration
+  float t_total = 0.;
   vec3 V = V_initial;
   vec3 W = W_initial;
 
+  // W += vec3(rand(sin(uTime * W.xy)), rand(sin(uTime *W.xy)), rand(sin(uTime * W.xy)));
 
-  for (int i = 0; i < 8; i++) {
+  for (int i = 0; i < 9; i++) {
     //INVARIANT: reflectance > 0.
     // V, W, reflectance belong to current iteration
 
@@ -309,16 +314,22 @@ vec3 rayTrace(vec3 V_initial, vec3 W_initial, World world) {
       color = color * (1. - scale) + scale* _color;
       break;
     }
+    //INVARIANT: surf exists
+    t_total += surf.t;
 
 
     for (int i = 0; i < 2; i ++) {
       Light light = world.light[i];
 
-      _color += shadeWithShadows(surf, light, world);
+      _color += shadeWithShadows(surf, light, world) *  min(1., 5./t_total);
     }
 
     // POST-LOOP
     color = color * (1. - scale) + scale * _color;
+
+    float power = 2.;
+    float multiplier = pow(1.5, power + power * cos(uTime/5.));
+    color = color +  0.5 * color * pow(tan(t_total*multiplier + -1. *time), 2.);
 
     bool canReflect = true;
     bool canTransmit = true;
@@ -333,7 +344,7 @@ vec3 rayTrace(vec3 V_initial, vec3 W_initial, World world) {
 
     if (canReflect) {
       if (canTransmit) {
-        action = rand(sin(uTime) * W.xy) > 0.5
+        action = rand(sin(time) * W.xy) > 0.5
           ? 1
           : 2;
       }else {
@@ -345,17 +356,18 @@ vec3 rayTrace(vec3 V_initial, vec3 W_initial, World world) {
       }
       //else action = 0
     }
+    // HARD CODE
+    action = 1;
 
+    if (action == 0) {
+      break;
+    }
     if (action == 1) {
       scale *= surf.reflectance;
-      if (scale <= 0.1) break;
       V = surf.S;
       W = 2. * (dot(-1. * W, surf.N)) * surf.N - (-1. * W);
     }
     if (action == 2) {
-      scale *= (1. - surf.opacity); //opacity 1.0 means filled
-      if (scale <= 0.1) break;
-
       W = W;
       V = surf.S + 0.001 * W;
     }
@@ -393,7 +405,7 @@ void main(void) {
 
   // INITIALIZE OBJECTS
   vec3 center = vec3(0., 0.0, -2.0);
-  float theta = uTime * 0.5;
+  float theta = time * 0.5;
   float r_1 = 0.8; //rotational radius
   float r_sphere = 0.5;
 
@@ -428,7 +440,7 @@ void main(void) {
 export default React.createClass({
     render() {
       return (
-              <Program width={620} height={620} vs={vs} fs={fs}/>
+              <Program width={500} height={500} vs={vs} fs={fs}/>
               );
     }
   });

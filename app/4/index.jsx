@@ -45,11 +45,11 @@ export default React.createClass({
       React.createElement(require("./Program7.jsx")),
       `
 ## Opacity + Reflection
-A non-recursive "recursive" ray tracer with either reflection xor transmission is simple to implement iteratively, with O(1) memory. This is because the recursion happens only once per call: at the tail. A photon in is a photon out. There is no need for a stack as the colors mix linearly.
+A non-recursive "recursive" ray tracer with either just reflection or just transmission is simple to implement iteratively. This is because the recursion happens only once per call: at the tail. A photon in is a photon out. There is no need for a stack as the colors mix linearly, and so the memory requirements are O(1).
 
-However, doing both reflection and transmission means two points of recursion per call, as we have to mix the fraction of photons going into the object, and the fraction of photons going out. Now we need a data structure to keep track of photon C, where photon A -> (B, C) and we choose to first compute B. Because of the multiplicative branching factor, the computation grows exponentially relative to the amount of levels.
+However, implementing both reflection and transmission means two points of recursion per call, as now each. Now we need a data structure to keep track of unexplored nodes in the ray tree. Because of the multiplicative branching factor, the computation grows exponentially relative to the amount of levels.
 
-The following solution uses an array, which uses O(2^n) memory, where n is maximum depth of recursion. The performance complexity is probably even worse; the code is so slow because I shimmy in a O(n) workaround for dynamic array indexing. OpenGL ES allows only constants, loop indicies, and combinations thereof for array indexing, so I simply loop until my loop index equals my variable, and break as soon as I'm done...
+The following solution uses a heap implemented in an array, which uses O(2^n) memory, where n is the number of levels to fork photons. The code is so slow because I shimmy in a O(n) workaround for dynamic array indexing. OpenGL ES allows only constants, loop indicies, and combinations thereof for array indexing, so I emulate variable array indexing simply by looping until my loop index equals my variable and then breaking.
 
 
 Alas, tis super slow... but works!
@@ -60,16 +60,28 @@ And I'm only recursing 3 levels deep...
 ## Opacity + Reflection, take 2
 This time I'm going to stick with a single point of recursion, at the tail, and stochastically sample a light path.
 
-The complete solution would be to repeat this computation through all 2^(n-1) permutations of lights paths, memoize each computation along the way, and then mix the colors in order. But I have better things to do than that.
+The complete solution would be to repeat this computation through all 2^(n-1) permutations of lights paths, perhaps memoize each computation along the way, and then mix the colors in order. But my computer is too slow.
 
 Stochastic sampling allows for graceful degradation.
 
       `,
       React.createElement(require("./Program9.jsx")),
       `
-## TODO
-- make darker as t gets larger
-`
+## Cool Thang
+- back to reflectance only, no transmission
+- Rays now get darker when they are further
+- Light is now exaggeratedly polarized, with the phase determined by the time taken by the photon.
+`,
+      React.createElement(require("./Program10.jsx")),
+      `
+## Refraction
+- added rotozooming
+      `,
+      React.createElement(require("./Program11.jsx")),
+      `
+## Refraction + reflection + rotozooming + cool thang phase beams
+      `,
+      React.createElement(require("./Program12.jsx")),
     ];
     return (
       <SuperLiterate>
