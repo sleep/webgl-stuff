@@ -6,9 +6,9 @@ const App = React.createClass({
         console.log("App rendered!");
         return (
             <div id="app">
-                <Nav/>
+              <Nav/>
                 <div id="content">
-                    {this.props.children}
+                  {this.props.children}
                 </div>
             </div>
         )

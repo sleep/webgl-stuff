@@ -5,17 +5,13 @@ export default React.createClass({
   render() {
     let content = [
       `
-# Intro to Shaders
-yo what up
-
+# Basic Shading
 ## Lambertian shading
 `,
       React.createElement(require("./Program1.jsx")),
       `
 
-whoa dude look at it shade...
-
-## emergent self-similarity in aliasing
+## emergent self-similarity via aliasing
 
 `,
       React.createElement(require("./Program2.jsx")),
@@ -38,12 +34,9 @@ ooh  whaddabout this
       React.createElement(require("./Program4.jsx")),
     ];
     return (
-      <div>
-        <h1>YO!!</h1>
       <SuperLiterate>
         {content}
       </SuperLiterate>
-      </div>
     );
   }
-})
+});

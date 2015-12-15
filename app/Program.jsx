@@ -118,11 +118,8 @@ export default React.createClass({
   componentWillUnmount() {
     cancelAnimationFrame(this.animationFrameRequest);
   },
-  onMouseOver() {
-    this.setState({animation: true});
-  },
-  onMouseLeave() {
-    this.setState({animation: false});
+  toggle() {
+    this.setState((prev) => ({animation: !prev.animation}));
   },
   render() {
     let style = Object.assign({
@@ -135,8 +132,7 @@ export default React.createClass({
     return (
       <div className={"programContainer"}>
         <canvas ref={"canvas"}
-                onMouseOver={this.onMouseOver}
-                onMouseLeave={this.onMouseLeave}
+                onClick={this.toggle}
                 style={style}
                 className={"program"}
                 width={this.props.width}

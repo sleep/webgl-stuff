@@ -5,14 +5,15 @@ export default React.createClass({
   render() {
     let content = [
       `
-    This is Sean Lee's page
-    for Computer Graphics...
+Some WebGL experiments.
+Code on [GitHub](https://github.com/sleep/graphics).
+Built with [react-literate](https://github.com/sleep/react-literate).
        `,
     ];
     return (
       <SuperLiterate>
         {content}
       </SuperLiterate>
-    );
+    )
   }
-});
+})

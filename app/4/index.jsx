@@ -5,40 +5,8 @@ export default React.createClass({
   render() {
     let content = [
       `
-# More Ray Tracing
+# Even More Ray Tracing
 
-## Phong model for specular reflectance:
-
-\`(ambient) + (diffuse Lambert reflectance) + (Phong specular reflectance)\`
-
-         `,
-      React.createElement(require("./Program1.jsx")),
-      `
-## Blinn-Phong model for specular reflectance:
-
-\`(ambient) + (diffuse Lambert reflectance) + (Blinn-Phong specular reflectance)\`
-
-         `,
-      React.createElement(require("./Program2.jsx")),
-      `
-## Shadows
-        `,
-      React.createElement(require("./Program3.jsx")),
-      `
-## Add a plane
-        `,
-      React.createElement(require("./Program4.jsx")),
-      `
-## Boolean intersection
-
-         `,
-      React.createElement(require("./Program5.jsx")),
-      `
-## Reflection
-
-`,
-      React.createElement(require("./Program6.jsx")),
-      `
 ## Classic Checkered floor
 
 `,
@@ -62,7 +30,7 @@ This time I'm going to stick with a single point of recursion, at the tail, and 
 
 The complete solution would be to repeat this computation through all 2^(n-1) permutations of lights paths, perhaps memoize each computation along the way, and then mix the colors in order. But my computer is too slow.
 
-Stochastic sampling allows for graceful degradation.
+Monte-carlo sampling allows for graceful degradation.
 
       `,
       React.createElement(require("./Program9.jsx")),

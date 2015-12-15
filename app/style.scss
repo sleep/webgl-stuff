@@ -59,7 +59,8 @@ body {
         width: 100%;
         min-height: calc(100vh - #{$navheight});
         .programContainer {
-            width: 100%;
+            margin: 0 -10vw;
+            width: calc(100% + 20vw);
             display: flex;
             align-items: center;
             flex-direction: row;
@@ -69,8 +70,9 @@ body {
         .program {
             flex: 0 0 auto;
         }
+        
         >div>div {
-            margin: 10vw 10vw;
+            margin: 10vw;
         }
     }
 }

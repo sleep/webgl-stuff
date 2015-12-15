@@ -1,4 +1,5 @@
 import React from "react";
+import {render} from "react-dom";
 import "./style.scss";
 
 import {Router, Route} from "react-router";
@@ -14,10 +15,6 @@ let routes = {
     component: App,
     indexRoute: {component: Landing},
     childRoutes: [
-      {
-        path: "0",
-        component: require("./0/index.jsx")
-      },
       {
         path: "1",
         component: require("./1/index.jsx")
@@ -38,7 +35,7 @@ let routes = {
 }
 
 
-React.render((
+render((
     <Router history={createHistory({queryKey: false})}
             children={routes}/>
 ), document.getElementById("app"));

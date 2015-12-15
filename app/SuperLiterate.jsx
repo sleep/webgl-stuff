@@ -16,6 +16,6 @@ export default React.createClass({
       <Literate className="literate" config={config}>
         {this.props.children}
       </Literate>
-    )
+    );
   }
 });
